@@ -1,5 +1,4 @@
 #include <fcntl.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -9,21 +8,17 @@
 
 char	*get_next_line(int fd)
 {
-	static char	*saved = NULL;
+	int			i;
 	char		*line;
 	char		*temp;
+	int			bytes;
+	int			line_len;
+	static char	*saved = NULL;
 	char		buf[BUFFER_SIZE + 1];
 	int			saved_len;
 
-	line = NULL;
-	temp = NULL;
-	int bytes, i, line_len;
-	if (fd < 0 || BUFFER_SIZE <= 0)
-		return (NULL);
-	// Read until we find \n or EOF
 	while (1)
 	{
-		// Check if saved buffer has \n
 		if (saved)
 		{
 			i = 0;
@@ -31,27 +26,19 @@ char	*get_next_line(int fd)
 				i++;
 			if (saved[i] == '\n')
 			{
-				// Found \n - extract line
 				line = malloc(i + 2);
-				if (!line)
-					return (NULL);
-				// Copy line including \n
 				for (int j = 0; j <= i; j++)
 					line[j] = saved[j];
 				line[i + 1] = '\0';
-				// Update saved (keep rest)
 				if (saved[i + 1])
 				{
 					line_len = 0;
 					while (saved[i + 1 + line_len])
 						line_len++;
 					temp = malloc(line_len + 1);
-					if (temp)
-					{
-						for (int j = 0; j < line_len; j++)
-							temp[j] = saved[i + 1 + j];
-						temp[line_len] = '\0';
-					}
+					for (int j = 0; j < line_len; j++)
+						temp[j] = saved[i + 1 + j];
+					temp[line_len] = '\0';
 					free(saved);
 					saved = temp;
 				}
@@ -63,11 +50,9 @@ char	*get_next_line(int fd)
 				return (line);
 			}
 		}
-		// Need to read more
 		bytes = read(fd, buf, BUFFER_SIZE);
 		if (bytes <= 0)
 		{
-			// EOF or error
 			if (saved && saved[0])
 			{
 				line = saved;
@@ -79,16 +64,13 @@ char	*get_next_line(int fd)
 			return (NULL);
 		}
 		buf[bytes] = '\0';
-		// Join saved + buf
 		if (saved)
 		{
 			saved_len = 0;
 			while (saved[saved_len])
 				saved_len++;
 			temp = malloc(saved_len + bytes + 1);
-			if (!temp)
-				return (NULL);
-			for (i = 0; i < saved_len; i++)
+			for (int i = 0; i < saved_len; i++)
 				temp[i] = saved[i];
 			for (int j = 0; j < bytes; j++)
 				temp[i + j] = buf[j];
@@ -99,22 +81,19 @@ char	*get_next_line(int fd)
 		else
 		{
 			saved = malloc(bytes + 1);
-			if (!saved)
-				return (NULL);
-			for (i = 0; i < bytes; i++)
+			for (int i = 0; i < bytes; i++)
 				saved[i] = buf[i];
 			saved[bytes] = '\0';
 		}
 	}
 }
 
-// Test
 int	main(void)
 {
 	int		fd;
 	char	*line;
 
-	fd = open("test.txt", O_RDONLY);
+	fd = open("text.txt", O_RDONLY);
 	while ((line = get_next_line(fd)) != NULL)
 	{
 		printf("%s", line);
@@ -123,20 +102,3 @@ int	main(void)
 	close(fd);
 	return (0);
 }
-
-/*
-🎯 EXAM PATTERN TO REMEMBER:
-
-static char	*saved = NULL;  // Persists between calls
-
-LOOP:
-1. Check if saved has '\n'
-   YES: extract line, update saved, return line
-2. NO: read() more data
-3. Join saved + new data
-4. Repeat
-
-EOF: Return saved if not empty, else NULL
-
-That's it! Just 4 steps in a loop.
-*/

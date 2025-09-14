@@ -1,91 +1,112 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   main.c                                             :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: tbaindur <tbaindur@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/08/30 20:02:46 by tbaindur          #+#    #+#             */
-/*   Updated: 2025/09/05 22:09:27 by tbaindur         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 
-void	ft_putchar(char c)
+// Global board (easier than passing around)
+int		*board;
+int		size;
+
+void	print_solution(void)
 {
+	char	c;
+
+	for (int i = 0; i < size; i++)
+	{
+		if (board[i] >= 10)
+			print_solution(); // This won't happen for reasonable n
+		c = board[i] + '0';
+		write(1, &c, 1);
+	}
+	write(1, "\n", 1);
+}
+
+// Even simpler print function
+void	print_digit(int n)
+{
+	char	c;
+
+	c = n + '0';
 	write(1, &c, 1);
 }
 
-void	ft_putnbr(int n)
+void	print_board(void)
 {
-	if (n >= 10)
-		ft_putnbr(n / 10);
-	ft_putchar((n % 10) + '0');
+	for (int i = 0; i < size; i++)
+		print_digit(board[i]);
+	write(1, "\n", 1);
 }
 
-void	print_solution(int *board, int n)
+// Check if queen at (row, col) conflicts with any previous queen
+int	conflicts(int row, int col)
 {
-	for (int i = 0; i < n; i++)
-		ft_putnbr(board[i]);
-}
-
-int	is_safe(int *board, int row, int col)
-{
-	int	square;
-	int	diff_columns;
-	int	diff_rows;
-
 	for (int i = 0; i < row; i++)
 	{
-		square = board[i];
-		if (square == col)
-			return (0);
-		diff_columns = square - col;
-		diff_rows = i - row;
-		if (diff_columns == diff_rows || diff_columns == -diff_rows)
-			return (0);
+		// Same column or diagonal?
+		if (board[i] == col ||
+			board[i] - col == i - row ||
+			board[i] - col == row - i)
+			return (1);
 	}
-	return (1);
+	return (0);
 }
 
-void	solve_nqueens(int *board, int row, int n)
+// Solve recursively
+void	solve(int row)
 {
-	if (row == n)
+	// All queens placed?
+	if (row == size)
 	{
-		print_solution(board, n);
-		fprintf(0, "\n");
+		print_board();
 		return ;
 	}
-	for (int col = 0; col < n; col++)
+	// Try each column
+	for (int col = 0; col < size; col++)
 	{
-		if (is_safe(board, row, col))
+		if (!conflicts(row, col))
 		{
 			board[row] = col;
-			solve_nqueens(board, row + 1, n);
-			board[row] = -1;
+			solve(row + 1);
 		}
 	}
 }
 
-int	main(int ac, char **av)
+int	main(int argc, char **argv)
 {
-	int	n;
-	int	*board;
-
-	if (ac != 2)
+	if (argc != 2)
 		return (1);
-	n = atoi(av[1]);
-	if (n <= 0)
+	size = atoi(argv[1]);
+	if (size <= 0)
 		return (1);
-	board = malloc(sizeof(int) * n);
+	board = malloc(size * sizeof(int));
 	if (!board)
 		return (1);
-	for (int i = 0; i < n; i++)
-		board[i] = -1;
-	solve_nqueens(board, 0, n);
+	solve(0); // Start with row 0
 	free(board);
 	return (0);
 }
+
+/*
+🚀 EXAM LIGHTNING VERSION - MEMORIZE THIS:
+
+int	conflicts(int row, int col) {
+	for (int i = 0; i < row; i++) {
+		if (board[i] == col ||                    // same column
+			board[i] - col == i - row ||          // diagonal \
+			board[i] - col == row - i)            // diagonal /
+			return (1);
+	}
+	return (0);
+}
+
+void	solve(int row) {
+	if (row == n) { print_solution(); return ; }
+	for (int col = 0; col < n; col++) {
+		if (!conflicts(row, col)) {
+			board[row] = col;
+			solve(row + 1);
+		}
+	}
+}
+
+That's it! 15 lines of core logic.
+*/

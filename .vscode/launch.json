@@ -10,7 +10,13 @@
             "request": "launch",
             "program": "${fileDirname}/${fileBasenameNoExtension}",
             "args": [
-                "bdac"
+                "3",
+                "1",
+                "0",
+                "2",
+                "4",
+                "5",
+                "3"
             ],
             "stopAtEntry": false,
             "cwd": "${fileDirname}",

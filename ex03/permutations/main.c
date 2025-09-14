@@ -1,92 +1,70 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   main.c                                             :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: tbaindur <tbaindur@student.42.fr>          +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/09/08 19:34:48 by tbaindur          #+#    #+#             */
-/*   Updated: 2025/09/08 20:25:05 by tbaindur         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
-int	str_len(char *str)
-{
-	int	i;
-
-	i = 0;
-	while (str && str[i])
-		i++;
-	return (i);
+// Simple swap function
+void swap(char *a, char *b) {
+    char temp = *a;
+    *a = *b;
+    *b = temp;
 }
 
-int	check_duplicates(char *str, int len)
-{
-	int	i;
-	int	*arr;
-
-	i = 0;
-	arr = (int *)calloc(len, sizeof(int));
-	while (str[i])
-	{
-		if (arr[i])
-		{
-			free(arr);
-			return (1);
-		}
-		arr[i] = i;
-		i++;
-	}
-	free(arr);
-	return (0);
+// Generate all permutations using backtracking
+void permute(char *str, int start, int end) {
+    // Base case: if we've fixed all positions, print the permutation
+    if (start == end) {
+        printf("%s\n", str);
+        return;
+    }
+    
+    // Try each character at the current position
+    for (int i = start; i <= end; i++) {
+        swap(&str[start], &str[i]);     // Place character at start position
+        permute(str, start + 1, end);   // Recurse for remaining positions
+        swap(&str[start], &str[i]);     // Backtrack (undo the swap)
+    }
 }
 
-void	sort(char **string, int len)
-{
-	int		i;
-	int		j;
-	char	c;
-
-	i = 0;
-	while ((*string)[i])
-	{
-		j = 0;
-		while ((*string)[i + j])
-		{
-			if ((*string)[i] > ((*string)[i + j]))
-			{
-				c = (*string)[i];
-				(*string)[i] = (*string)[i + j];
-				(*string)[i + j] = c;
-				j = -1;
-			}
-			j++;
-		}
-		i++;
-	}
+int main(int argc, char *argv[]) {
+    // Validate arguments
+    if (argc != 2)
+        return 1;
+    
+    char *str = argv[1];
+    int len = strlen(str);
+    
+    // Sort string alphabetically (for lexicographic order)
+    for (int i = 0; i < len - 1; i++) {
+        for (int j = 0; j < len - i - 1; j++) {
+            if (str[j] > str[j + 1]) {
+                swap(&str[j], &str[j + 1]);
+            }
+        }
+    }
+    
+    // Generate all permutations
+    permute(str, 0, len - 1);
+    
+    return 0;
 }
 
-void	print_permutations(char *str, int len)
-{
-}
+/*
+🧠 EXAM MEMORY PATTERN:
 
-int	main(int ac, char *av[])
-{
-	char	*str;
-	int		*arr;
-	int		len;
+PERMUTATION = "Try each character at each position"
 
-	if (ac != 2)
-		return (1);
-	str = av[1];
-	len = str_len(str);
-	if (check_duplicates(str, len))
-		return (1);
-	sort(&str, len);
-	puts(str);
-	print_permutations(str, len);
-	return (0);
-}
+ALGORITHM:
+1. Fix first character (try all possibilities)
+2. Recursively permute the rest
+3. Backtrack and try next character
+
+TRACE EXAMPLE: "ABC"
+permute("ABC", 0, 2):
+  Try A at pos 0: swap(A,A) → "ABC" → permute("ABC", 1, 2)
+    Try B at pos 1: swap(B,B) → "ABC" → permute("ABC", 2, 2) → print "ABC"
+    Try C at pos 1: swap(B,C) → "ACB" → permute("ACB", 2, 2) → print "ACB"
+  Try B at pos 0: swap(A,B) → "BAC" → permute("BAC", 1, 2)
+    ... and so on
+
+KEY INSIGHT: Backtracking happens automatically when function returns!
+*/
